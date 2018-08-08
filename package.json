@@ -1,7 +1,7 @@
 {
-  "name": "peer",
+  "name": "baatcheet",
   "version": "1.0.0",
-  "description": "",
+  "description": "Decentralised Chat application with webrtc",
   "main": "index.js",
   "scripts": {
     "build": "browserify -e index.js -o bundle.js",
@@ -9,7 +9,7 @@
     "serve": "http-server .",
     "start": "npm run build && npm run serve"
   },
-  "author": "",
+  "author": "niklabh",
   "license": "ISC",
   "dependencies": {
     "simple-peer": "^9.1.2"
@@ -17,5 +17,6 @@
   "devDependencies": {
     "browserify": "^16.2.2",
     "http-server": "^0.11.1"
-  }
+  },
+  "keywords": ["webrtc", "chat", "peer-to-peer", "decentralised"]
 }
