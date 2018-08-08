@@ -1,11 +1,18 @@
-var Peer = require('simple-peer')
-var p = new Peer({ initiator: location.hash === '#1', trickle: false })
+const QRCode = require('qrcode')
+const Peer = require('simple-peer')
+const p = new Peer({ initiator: location.hash === '#1', trickle: false })
 
 p.on('error', function (err) { console.log('error', err) })
 
 p.on('signal', function (data) {
   console.log('SIGNAL', JSON.stringify(data))
   document.querySelector('#outgoing').textContent = JSON.stringify(data)
+
+  const canvas = document.getElementById('canvas')
+  QRCode.toCanvas(canvas, JSON.stringify(data), function (error) {
+    if (error) console.error(error)
+    console.log('success!')
+  })
 })
 
 document.querySelector('form#signal').addEventListener('submit', function (ev) {
