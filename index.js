@@ -1,36 +1,81 @@
+const Vue = require('vue')
 const QRCode = require('qrcode')
 const Peer = require('simple-peer')
-const p = new Peer({ initiator: location.hash === '#1', trickle: false })
+const Instascan = require('instascan')
 
-p.on('error', function (err) { console.log('error', err) })
+const app = new Vue({
+  el: '#app',
+  data: {
+    message: '!',
+    connected: false,
+    signalling: false,
+    scanning: false,
+    messages: []
+  },
+  methods: {
+    send: function () {
+      const p = new Peer({ initiator: true, trickle: false })
+      this.connect(p)
+    },
+    receive: function () {
+      const self = this
+      const p = new Peer({ initiator: false, trickle: false })
+      self.connect(p)
 
-p.on('signal', function (data) {
-  console.log('SIGNAL', JSON.stringify(data))
-  document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      self.scanning = true
 
-  const canvas = document.getElementById('canvas')
-  QRCode.toCanvas(canvas, JSON.stringify(data), function (error) {
-    if (error) console.error(error)
-    console.log('success!')
-  })
-})
+      self.scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5 })
 
-document.querySelector('form#signal').addEventListener('submit', function (ev) {
-  ev.preventDefault()
-  p.signal(JSON.parse(document.querySelector('#incoming').value))
-})
+      self.scanner.addListener('scan', function (content, image) {
+        console.log(content)
 
-p.on('connect', function () {
-  console.log('CONNECT')
-  p.send('whatever' + Math.random())
+        p.signal(JSON.parse(content))
 
-  document.querySelector('form#message').addEventListener('submit', function (ev) {
-    ev.preventDefault()
-    p.send(document.querySelector('#outMsg').value)
-  })
-})
+        self.scanning = false
+      })
 
-p.on('data', function (data) {
-  document.querySelector('#inMsg').innerHTML += `<li>${data}</li>`
-  console.log('data: ' + data)
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 1) {
+          self.scanner.start(cameras[1])
+        } else if (cameras.length > 0) {
+          self.scanner.start(cameras[0])
+        } else {
+          console.error('No cameras found.')
+        }
+      }).catch(function (e) {
+        console.error(e)
+      })
+    },
+    connect: function (p) {
+      p.on('error', function (err) { console.log('error', err) })
+
+      p.on('signal', (data) => {
+        console.log('SIGNAL', JSON.stringify(data))
+        this.signalling = true
+        this.scanning = false
+
+        const canvas = document.getElementById('canvas')
+        QRCode.toCanvas(canvas, JSON.stringify(data), (error) => {
+          if (error) console.error(error)
+          console.log('success!')
+        })
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        this.connected = true
+        this.messages.push({user: 'me', message: 'connected'})
+        p.send('connected')
+      })
+
+      p.on('data', (data) => {
+        this.messages.push({user: 'friend', message: data})
+      })
+
+      // document.querySelector('form#message').addEventListener('submit', function (ev) {
+      //   ev.preventDefault()
+      //   p.send(document.querySelector('#outMsg').value)
+      // })
+    }
+  }
 })
