@@ -16,14 +16,22 @@
   <body>
     <div id="app" class="ui container">
       <h1 class="ui center aligned header">BaatCheet {{ message }}</h1>
-      <canvas id="canvas"></canvas>
-      <video id="preview"></video>
-      <div class="ui center aligned segment" v-if="!connected">
-        <button class="green ui button" v-on:click="send">New</button>
-        <button class="purple ui button" v-on:click="receive">Connect</button>
+      <div v-if="!connected">
+        <canvas id="canvas"></canvas>
+        <video id="preview"></video>
+        <div class="ui center aligned segment">
+          <button class="green ui button" v-on:click="send">New</button>
+          <button class="purple ui button" v-on:click="receive">Connect</button>
+        </div>
       </div>
       <div v-for="message in messages">
         <div class="ui green message">{{message.user}}: {{message.message}}</div>
+      </div>
+      <div v-if="connected" class="ui right action input">
+        <input id="message" type="text" placeholder="hello">
+        <div class="ui teal button" v-on:click="sendMessage">
+          <i class="paper plane icon"></i>
+        </div>
       </div>
     </div>
     <script src="bundle.js"></script>

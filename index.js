@@ -10,7 +10,7 @@ const app = new Vue({
     connected: false,
     signalling: false,
     scanning: false,
-    messages: []
+    messages: [{user: 'system', message: 'end to end secure'}]
   },
   methods: {
     send: function () {
@@ -47,6 +47,7 @@ const app = new Vue({
       })
     },
     connect: function (p) {
+      this.p = p
       p.on('error', function (err) { console.log('error', err) })
 
       p.on('signal', (data) => {
@@ -71,11 +72,12 @@ const app = new Vue({
       p.on('data', (data) => {
         this.messages.push({user: 'friend', message: data})
       })
+    },
+    sendMessage: function () {
+      const message = document.querySelector('#message').value
 
-      // document.querySelector('form#message').addEventListener('submit', function (ev) {
-      //   ev.preventDefault()
-      //   p.send(document.querySelector('#outMsg').value)
-      // })
+      this.p.send(message)
+      this.messages.push({user: 'me', message: message})
     }
   }
 })
