@@ -1,40 +1,16 @@
 {
   "name": "baatcheet",
-  "version": "1.0.0",
-  "description": "Decentralised Chat application with webrtc",
-  "main": "index.js",
-  "scripts": {
-    "css": "cd public/semantic && gulp build",
-    "build": "browserify -e index.js -o public/bundle.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "http-server public",
-    "start": "npm run build && npm run serve"
-  },
-  "browser": {
-    "vue": "vue/dist/vue.common.js"
-  },
-  "author": "niklabh",
-  "license": "ISC",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
-    "instascan": "^1.0.0",
-    "qrcode": "^1.2.2",
-    "semantic-ui": "^2.3.3",
-    "signalhub": "^4.9.0",
-    "simple-peer": "^9.1.2",
-    "vue": "^2.5.17",
-    "webrtc-swarm": "^2.9.0",
-    "wrtc": "^0.1.6"
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "1.1.4"
   },
-  "devDependencies": {
-    "browserify": "^16.2.2",
-    "gulp": "^3.9.1",
-    "http-server": "^0.11.1",
-    "watchify": "^3.11.0"
-  },
-  "keywords": [
-    "webrtc",
-    "chat",
-    "peer-to-peer",
-    "decentralised"
-  ]
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
 }
