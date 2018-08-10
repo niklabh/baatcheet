@@ -172,8 +172,16 @@ body {
 .sideBar-body {
   position: relative;
   padding: 10px !important;
-  border-bottom: 1px solid #f7f7f7;
   height: 72px;
+  border-bottom: 1px solid #f7f7f7;
+  margin: 0 !important;
+  cursor: pointer;
+}
+
+.sideBar-body-form {
+  position: relative;
+  padding: 10px !important;
+  border-bottom: 1px solid #f7f7f7;
   margin: 0 !important;
   cursor: pointer;
 }

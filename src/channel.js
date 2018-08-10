@@ -32,7 +32,7 @@ const connect = (peerId, initiator) => {
       messages[peerId] = []
     }
 
-    messages[peerId].push({timestamp: Date.now(), message: data})
+    messages[peerId].push({timestamp: Date.now(), message: data, by: peerId})
   })
 
   peers[peerId] = peer
@@ -46,6 +46,7 @@ const send = (peerId, message) => {
   }
 
   peers[peerId].send(message)
+  messages[peerId].push({timestamp: Date.now(), message: message, by: username})
 }
 
 const login = (user) => {
@@ -61,9 +62,8 @@ const login = (user) => {
     })
 }
 
-if (typeof window === 'object') {
-  window.connect = connect
-  window.send = send
-  window.login = login
-  window.peers = peers
-}
+exports.login = login
+exports.connect = connect
+exports.send = send
+exports.peers = peers
+exports.messages = messages

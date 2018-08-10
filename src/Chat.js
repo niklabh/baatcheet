@@ -1,9 +1,14 @@
 import React, { Component } from 'react'
 import Gravatar from 'react-gravatar'
+import channel from './channel'
+
 import './Chat.css'
 
 class Chat extends Component {
   state = {
+    addUsername: '',
+    addName: '',
+    addEmail: '',
     username: 'nikhil',
     user: {
       name: 'Nikhil Ranjan',
@@ -11,7 +16,7 @@ class Chat extends Component {
     },
     peers: {
       nikhil: {name: 'Nikhil Ranjan', email: 'niklabh811@gmail.com'},
-      raj: {name: 'Raj Kukreja'}
+      raj: {name: 'Raj Kukreja', email: 'niklabh811@gmail.com'}
     },
     active: 'nikhil',
     messages: [
@@ -29,6 +34,12 @@ class Chat extends Component {
     newUser: false
   }
 
+  constructor(args) {
+    super(args)
+
+    channel.login('rokra')
+  }
+
   send = () => {
     console.log(this)
   }
@@ -39,6 +50,14 @@ class Chat extends Component {
 
   hideNewUser = () => {
     this.setState({newUser: false})
+  }
+
+  addUser = () => {
+    console.log(this.state)
+  }
+
+  handleChange = (event) => {
+    this.setState({[event.target.name]: event.target.value})
   }
 
   render () {
@@ -118,25 +137,12 @@ class Chat extends Component {
               </div>
 
               <div className='row compose-sideBar'>
-                {Object.keys(this.state.peers).map((user) => (
-                  <div className='row sideBar-body'>
-                    <div className='col-sm-3 col-xs-3 sideBar-avatar'>
-                      <div className='avatar-icon'>
-                        <Gravatar email={this.state.peers[user].email} />
-                      </div>
-                    </div>
-                    <div className='col-sm-9 col-xs-9 sideBar-main'>
-                      <div className='row'>
-                        <div className='col-sm-8 col-xs-8 sideBar-name'>
-                          <span className='name-meta'>{this.state.peers[user].name}</span>
-                        </div>
-                        <div className='col-sm-4 col-xs-4 pull-right sideBar-time'>
-                          <span className='time-meta pull-right'>18:18</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <div className='row sideBar-body-form'>
+                  <input name='addUsername' value={this.state.addUsername} onChange={this.handleChange} className="form-control" type="text" placeholder="User Name" /><br />
+                  <input name='addName' value={this.state.addName} onChange={this.handleChange} className="form-control" type="text" placeholder="Full Name" /><br />
+                  <input name='addEmail' value={this.state.addEmail} onChange={this.handleChange}  className="form-control" type="text" placeholder="Email" /><br />
+                  <button onClick={this.addUser} type="button" className="btn btn-success btn-lg btn-block">Add</button>
+                </div>
               </div>
             </div>
 
