@@ -28,7 +28,8 @@
   "devDependencies": {
     "browserify": "^16.2.2",
     "gulp": "^3.9.1",
-    "http-server": "^0.11.1"
+    "http-server": "^0.11.1",
+    "watchify": "^3.11.0"
   },
   "keywords": [
     "webrtc",

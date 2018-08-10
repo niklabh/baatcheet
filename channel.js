@@ -8,7 +8,18 @@ let username
 const peers = {}
 const messages = {}
 
-const connectPeer = (peer, peerId) => {
+const connect = (peerId, initiator) => {
+  if (peers[peerId]) {
+    return peers[peerId]
+  }
+
+  const peer = new Peer({ initiator, wrtc })
+
+  peer.on('signal', (signal) => {
+    console.log(`signalling ${peerId}`, Object.assign(signal, {peerId: username}))
+    hub.broadcast(peerId, Object.assign(signal, {peerId: username}))
+  })
+
   peer.on('error', console.error)
 
   peer.on('connect', () => {
@@ -23,24 +34,10 @@ const connectPeer = (peer, peerId) => {
 
     messages[peerId].push({timestamp: Date.now(), message: data})
   })
-}
 
-const connect = (peerId) => {
-  if (peers[peerId] && peers[peerId].connected) {
-    return
-  }
-  const peer = new Peer({ initiator: true, wrtc })
-
-  peer.on('signal', (signal) => {
-    if (!signal.type) {
-      return
-    }
-    console.log(`connecting signal`, Object.assign(signal, {peerId: username}))
-    hub.broadcast(peerId, Object.assign(signal, {peerId: username}))
-  })
-
-  connectPeer(peer, peerId)
   peers[peerId] = peer
+
+  return peer
 }
 
 const send = (peerId, message) => {
@@ -55,22 +52,12 @@ const login = (user) => {
   username = user
   hub.subscribe(username)
     .on('data', (signal) => {
-      console.log(`got signal`, signal)
-      if (!peers[signal.peerId] || peers[signal.peerId].destroyed) {
-        const peer = new Peer({ wrtc })
+      console.log(`received signal`, signal)
 
-        peer.on('signal', (outSignal) => {
-          if (outSignal.type === 'answer') {
-            console.log(`signalling`, Object.assign(outSignal, {peerId: username}))
-            hub.broadcast(signal.peerId, Object.assign(outSignal, {peerId: username}))
-          }
-        })
+      const peerId = signal.peerId
+      const peer = connect(peerId, false)
 
-        connectPeer(peer, signal.peerId)
-        peers[signal.peerId] = peer
-      }
-
-      peers[signal.peerId].signal(signal)
+      peer.signal(signal)
     })
 }
 
