@@ -19,8 +19,11 @@
     "instascan": "^1.0.0",
     "qrcode": "^1.2.2",
     "semantic-ui": "^2.3.3",
+    "signalhub": "^4.9.0",
     "simple-peer": "^9.1.2",
-    "vue": "^2.5.17"
+    "vue": "^2.5.17",
+    "webrtc-swarm": "^2.9.0",
+    "wrtc": "^0.1.6"
   },
   "devDependencies": {
     "browserify": "^16.2.2",

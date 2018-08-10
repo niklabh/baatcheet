@@ -1,0 +1,27 @@
+signal hub
+broadcast subscribe
+
+simple peer https://github.com/feross/simple-peer
+signal https://github.com/mafintosh/signalhub
+dht https://github.com/diasdavid/webrtc-ring
+
+https://github.com/kgryte/awesome-peer-to-peer/blob/master/README.md
+
+offline
+
+
+1. create public private key pair
+2.
+
+
+
+
+
+users
+
+@mafintosh
+@taravancil
+@pfrazee
+@diasdavid
+@dominic
+@andrestaltz
