@@ -1,16 +1,28 @@
 {
   "name": "baatcheet",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
-    "react-scripts": "1.1.4"
-  },
+  "version": "1.0.0",
+  "description": "Decentralised Chat application with webrtc",
+  "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
-  }
+  },
+  "author": "niklabh",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "1.1.4",
+    "signalhub": "^4.9.0",
+    "simple-peer": "^9.1.2",
+    "wrtc": "^0.1.6"
+  },
+  "keywords": [
+    "webrtc",
+    "chat",
+    "peer-to-peer",
+    "decentralised"
+  ]
 }
