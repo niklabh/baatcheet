@@ -25,11 +25,20 @@ class Chat extends Component {
       {by: 'raj', message: 'Ayya sdasdaasdyyy..!'},
       {by: 'nikhil', message: 'Hyy, Its Awesome..!'},
       {by: 'nikhil', message: 'Hyy, Its Awesome..!'}
-    ]
+    ],
+    newUser: false
   }
 
   send = () => {
     console.log(this)
+  }
+
+  showNewUser = () => {
+    this.setState({newUser: true})
+  }
+
+  hideNewUser = () => {
+    this.setState({newUser: false})
   }
 
   render () {
@@ -49,7 +58,7 @@ class Chat extends Component {
                 <div className='col-sm-1 col-xs-1  heading-dot  pull-right'>
                   <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
                 </div>
-                <div className='col-sm-2 col-xs-2 heading-compose  pull-right'>
+                <div className='col-sm-2 col-xs-2 heading-compose  pull-right' onClick={this.showNewUser}>
                   <i className='fa fa-comments fa-2x  pull-right' aria-hidden='true' />
                 </div>
               </div>
@@ -86,11 +95,11 @@ class Chat extends Component {
               </div>
 
             </div>
-            <div className='side-two'>
+            <div className='side-two' style={{left: this.state.newUser ? 0 : '-100%'}}>
 
               <div className='row newMessage-heading'>
                 <div className='row newMessage-main'>
-                  <div className='col-sm-2 col-xs-2 newMessage-back'>
+                  <div className='col-sm-2 col-xs-2 newMessage-back' onClick={this.hideNewUser}>
                     <i className='fa fa-arrow-left' aria-hidden='true' />
                   </div>
                   <div className='col-sm-10 col-xs-10 newMessage-title'>
