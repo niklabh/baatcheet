@@ -5,6 +5,8 @@ const wrtc = require('wrtc')
 const hub = signalhub('baatcheet', 'https://baatcheet.herokuapp.com')
 
 let username
+const USERS = 'users'
+const users = {}
 const peers = {}
 const messages = {}
 
@@ -49,7 +51,7 @@ const send = (peerId, message) => {
   messages[peerId].push({timestamp: Date.now(), message: message, by: username})
 }
 
-const login = (user) => {
+const login = (user, fullname, email) => {
   username = user
   hub.subscribe(username)
     .on('data', (signal) => {
@@ -60,10 +62,34 @@ const login = (user) => {
 
       peer.signal(signal)
     })
+
+  setInterval(() => hub.broadcast(USERS, {user, fullname, email}), 5000)
+
+  hub.subscribe(USERS)
+    .on('data', (data) => {
+      if (data.user === username) {
+        return
+      }
+      users[data.user] = data
+    })
 }
+
+const loggedIn = () => username
 
 exports.login = login
 exports.connect = connect
 exports.send = send
 exports.peers = peers
 exports.messages = messages
+exports.users = users
+exports.loggedIn = loggedIn
+
+if (typeof window === 'object') {
+  window.login = login
+  window.connect = connect
+  window.send = send
+  window.peers = peers
+  window.messages = messages
+  window.users = users
+  window.loggedIn = loggedIn
+}

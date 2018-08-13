@@ -1,68 +1,218 @@
 import React, { Component } from 'react'
 import Gravatar from 'react-gravatar'
-import channel from './channel'
-
+import {
+  FormGroup,
+  FormControl,
+  ControlLabel,
+  Button
+} from 'react-bootstrap'
 import './Chat.css'
 
-class Chat extends Component {
-  state = {
-    addUsername: '',
-    addName: '',
-    addEmail: '',
-    username: 'nikhil',
-    user: {
-      name: 'Nikhil Ranjan',
-      email: 'niklabh811@gmail.com'
-    },
-    peers: {
-      nikhil: {name: 'Nikhil Ranjan', email: 'niklabh811@gmail.com'},
-      raj: {name: 'Raj Kukreja', email: 'niklabh811@gmail.com'}
-    },
-    active: 'nikhil',
-    messages: [
-      {by: 'nikhil', message: 'Hyy, Its Awesome..!'},
-      {by: 'raj', message: 'Ayyyyas dasdasday..!'},
-      {by: 'raj', message: 'Ayyasdyyy..!'},
-      {by: 'raj', message: 'Ayyyyyasdadadasd..!'},
-      {by: 'raj', message: 'Ayya sdasdyyy..!'},
-      {by: 'raj', message: 'Ayya sdasdyyy..!'},
-      {by: 'raj', message: 'Ayya sdasdasdyyy..!'},
-      {by: 'raj', message: 'Ayya sdasdaasdyyy..!'},
-      {by: 'nikhil', message: 'Hyy, Its Awesome..!'},
-      {by: 'nikhil', message: 'Hyy, Its Awesome..!'}
-    ],
-    newUser: false
-  }
+const Peer = require('simple-peer')
+const signalhub = require('signalhub')
+const wrtc = require('wrtc')
 
-  constructor(args) {
+const hub = signalhub('baatcheet', 'https://baatcheet.herokuapp.com')
+const USERS = 'users'
+const peers = {}
+
+class Chat extends Component {
+  constructor (args) {
     super(args)
 
-    channel.login('rokra')
+    this.state = {
+      loggedIn: false,
+      userName: '',
+      fullName: '',
+      email: '',
+      users: {},
+      messages: {},
+      active: '',
+      newUser: false
+    }
+
+    this.alert = this.alert.bind(this)
+    this.login = this.login.bind(this)
+    this.connect = this.connect.bind(this)
+    this.send = this.send.bind(this)
+    this.showNewUser = this.showNewUser.bind(this)
+    this.hideNewUser = this.hideNewUser.bind(this)
+    this.handleChange = this.handleChange.bind(this)
+    this.renderLogin = this.renderLogin.bind(this)
   }
 
-  send = () => {
-    console.log(this)
+  alert (message) {
+    console.error(message)
   }
 
-  showNewUser = () => {
+  login (event) {
+    event.preventDefault()
+
+    const { userName, fullName, email } = this.state
+
+    if (!userName) {
+      this.alert('username required')
+      return
+    }
+
+    if (!fullName) {
+      this.alert('fullName required')
+      return
+    }
+
+    if (!email) {
+      this.alert('email required')
+      return
+    }
+
+    hub.subscribe(userName)
+      .on('data', (signal) => {
+        console.log('received signal', signal)
+
+        const {peerId} = signal.peerId
+        const peer = this.connect(peerId, false)
+
+        peer.signal(signal)
+      })
+
+    setInterval(() => hub.broadcast(USERS, {userName, fullName, email}), 5000)
+
+    hub.subscribe(USERS)
+      .on('data', (data) => {
+        if (data.user === userName) {
+          return
+        }
+        this.setState({users: Object.assign(this.state.users, {[data.user]: data})})
+      })
+
+    this.setState({loggedIn: true})
+  }
+
+  connect (peerId, initiator) {
+    const { userName, messages } = this.state
+
+    if (peers[peerId]) {
+      return peers[peerId]
+    }
+
+    const peer = new Peer({ initiator, wrtc })
+
+    peer.on('signal', (signal) => {
+      console.log(`signalling ${peerId}`, Object.assign(signal, {peerId: userName}))
+      hub.broadcast(peerId, Object.assign(signal, {peerId: userName}))
+    })
+
+    peer.on('error', console.error)
+
+    peer.on('connect', () => {
+      console.log(`connected with ${peerId}`)
+    })
+
+    peer.on('data', (data) => {
+      console.log(`message from ${peerId}`, data.toString())
+      if (!Array.isArray(messages[peerId])) {
+        this.setState({messages: Object.assign(messages, {[peerId]: []})})
+      }
+
+      this.setState({messages: Object.assign(messages, {[peerId]: [...messages[peerId], {timestamp: Date.now(), message: data, by: peerId}]})})
+    })
+
+    peers[peerId] = peer
+
+    return peer
+  }
+
+  send () {
+    const { userName, messages } = this.state
+    const peerId = this.state.active
+    const comment = document.getElementById('comment')
+    const message = comment ? comment.value : ''
+
+    if (!message) {
+      return
+    }
+
+    if (!peers[peerId] || !peers[peerId].connected) {
+      this.alert(`${peerId} not connected`)
+    }
+
+    peers[peerId].send(message)
+
+    this.setState({messages: Object.assign(messages, {[peerId]: [...messages[peerId], {timestamp: Date.now(), message: message, by: userName}]})})
+  }
+
+  showNewUser () {
     this.setState({newUser: true})
   }
 
-  hideNewUser = () => {
+  hideNewUser () {
     this.setState({newUser: false})
   }
 
-  addUser = () => {
-    console.log(this.state)
+  handleChange (event) {
+    this.setState({[event.target.id]: event.target.value})
   }
 
-  handleChange = (event) => {
-    this.setState({[event.target.name]: event.target.value})
+  connectUser (user) {
+    const { userName, messages } = this.state
+
+    this.connect(user, true)
+    this.hideNewUser()
+    this.setState({active: user})
+    this.setState({messages: Object.assign(messages, {[user]: [...messages[user], {timestamp: Date.now(), message: 'Chat End to End Secure', by: userName}]})})
+  }
+
+  renderLogin () {
+    return (
+      <div className='container app Signup'>
+        <div className='row app-one'>
+          <h1 id='header'>BaatCheet</h1>
+          <form onSubmit={this.login} className='resigration'>
+            <FormGroup controlId='userName' bsSize='large'>
+              <ControlLabel>User Name</ControlLabel>
+              <FormControl
+                autoFocus
+                type='text'
+                value={this.state.userName}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup controlId='fullName' bsSize='large'>
+              <ControlLabel>Full Name</ControlLabel>
+              <FormControl
+                value={this.state.fullName}
+                onChange={this.handleChange}
+                type='text'
+              />
+            </FormGroup>
+            <FormGroup controlId='email' bsSize='large'>
+              <ControlLabel>Email</ControlLabel>
+              <FormControl
+                value={this.state.email}
+                onChange={this.handleChange}
+                type='email'
+              />
+            </FormGroup>
+            <Button
+              block
+              className='btn btn-success btn-lg btn-block'
+              type='submit'
+            >
+              Start Chatting
+            </Button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   render () {
+    if (!this.state.loggedIn) {
+      return this.renderLogin()
+    }
+
     return (
-      <div className='container app'>
+      <div className='container app chatApp'>
         <div className='row app-one'>
 
           <div className='col-sm-4 side'>
@@ -71,7 +221,7 @@ class Chat extends Component {
               <div className='row heading'>
                 <div className='col-sm-3 col-xs-3 heading-avatar'>
                   <div className='heading-avatar-icon'>
-                    <Gravatar email={this.state.user.email} />
+                    <Gravatar email={this.state.email} />
                   </div>
                 </div>
                 <div className='col-sm-1 col-xs-1  heading-dot  pull-right'>
@@ -92,20 +242,20 @@ class Chat extends Component {
               </div>
 
               <div className='row sideBar'>
-                {Object.keys(this.state.peers).map((user) => (
+                {Object.keys(this.state.messages).map((user) => (
                   <div className='row sideBar-body'>
                     <div className='col-sm-3 col-xs-3 sideBar-avatar'>
                       <div className='avatar-icon'>
-                        <Gravatar email={this.state.peers[user].email} />
+                        <Gravatar email={this.state.users[user].email} />
                       </div>
                     </div>
                     <div className='col-sm-9 col-xs-9 sideBar-main'>
                       <div className='row'>
                         <div className='col-sm-8 col-xs-8 sideBar-name'>
-                          <span className='name-meta'>{this.state.peers[user].name}</span>
+                          <span className='name-meta'>{this.state.users[user].fullName} ({this.state.users[user].userName})</span>
                         </div>
                         <div className='col-sm-4 col-xs-4 pull-right sideBar-time'>
-                          <span className='time-meta pull-right'>18:18</span>
+                          <span className='time-meta pull-right'>✓</span>
                         </div>
                       </div>
                     </div>
@@ -137,12 +287,25 @@ class Chat extends Component {
               </div>
 
               <div className='row compose-sideBar'>
-                <div className='row sideBar-body-form'>
-                  <input name='addUsername' value={this.state.addUsername} onChange={this.handleChange} className="form-control" type="text" placeholder="User Name" /><br />
-                  <input name='addName' value={this.state.addName} onChange={this.handleChange} className="form-control" type="text" placeholder="Full Name" /><br />
-                  <input name='addEmail' value={this.state.addEmail} onChange={this.handleChange}  className="form-control" type="text" placeholder="Email" /><br />
-                  <button onClick={this.addUser} type="button" className="btn btn-success btn-lg btn-block">Add</button>
-                </div>
+                {Object.keys(this.state.users).map((user) => (
+                  <div className='row sideBar-body' onClick={() => this.connectUser(user)}>
+                    <div className='col-sm-3 col-xs-3 sideBar-avatar'>
+                      <div className='avatar-icon'>
+                        <Gravatar email={this.state.users[user].email} />
+                      </div>
+                    </div>
+                    <div className='col-sm-9 col-xs-9 sideBar-main'>
+                      <div className='row'>
+                        <div className='col-sm-8 col-xs-8 sideBar-name'>
+                          <span className='name-meta'>{this.state.users[user].fullName} ({this.state.users[user].userName})</span>
+                        </div>
+                        <div className='col-sm-4 col-xs-4 pull-right sideBar-time'>
+                          <span className='time-meta pull-right'>✓</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -153,11 +316,19 @@ class Chat extends Component {
             <div className='row heading'>
               <div className='col-sm-2 col-md-1 col-xs-3 heading-avatar'>
                 <div className='heading-avatar-icon'>
-                  <Gravatar email={this.state.peers[this.state.active].email} />
+                  {this.state.users[this.state.active]
+                    ? <Gravatar email={this.state.users[this.state.active].email} />
+                    : null
+                  }
                 </div>
               </div>
               <div className='col-sm-8 col-xs-7 heading-name'>
-                <a className='heading-name-meta'>{this.state.peers[this.state.active].name}</a>
+                <a className='heading-name-meta'>
+                  {this.state.users[this.state.active]
+                    ? this.state.users[this.state.active].fullName
+                    : ''
+                  }
+                </a>
                 <span className='heading-online'>Online</span>
               </div>
               <div className='col-sm-1 col-xs-1  heading-dot pull-right'>
@@ -175,19 +346,18 @@ class Chat extends Component {
                 </div>
               </div>
 
-              {this.state.messages.map((message) => (
+              {this.state.messages[this.state.active] ? Object.keys(this.state.messages[this.state.active]).map((message) => (
                 <div className='row message-body'>
                   <div className={`col-sm-12 message-main-${message.by === this.state.username ? 'sender' : 'receiver'}`}>
-                    <div className={message.by === this.state.username ? 'sender' : 'receiver'}>
+                    <div className={message.by === this.state.userName ? 'sender' : 'receiver'}>
                       <div className='message-text'>
                         {message.message}
                       </div>
-                      <span className='message-time pull-right'>
-                        Sun</span>
+                      <span className='message-time pull-right'>Sun</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : null }
             </div>
 
             <div className='row reply'>
