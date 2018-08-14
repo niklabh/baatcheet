@@ -12,6 +12,44 @@ const Peer = require('simple-peer')
 const signalhub = require('signalhub')
 const wrtc = require('wrtc')
 
+const config = {
+  iceServers: [
+    {url: 'stun:stun.l.google.com:19302'},
+    {url: 'stun:stun1.l.google.com:19302'},
+    {url: 'stun:stun2.l.google.com:19302'},
+    {url: 'stun:stun3.l.google.com:19302'},
+    {url: 'stun:stun4.l.google.com:19302'},
+    {url: 'stun:stun01.sipphone.com'},
+    {url: 'stun:stun.ekiga.net'},
+    {url: 'stun:stun.fwdnet.net'},
+    {url: 'stun:stun.ideasip.com'},
+    {url: 'stun:stun.iptel.org'},
+    {url: 'stun:stun.rixtelecom.se'},
+    {url: 'stun:stun.schlund.de'},
+    {url: 'stun:stunserver.org'},
+    {url: 'stun:stun.softjoys.com'},
+    {url: 'stun:stun.voiparound.com'},
+    {url: 'stun:stun.voipbuster.com'},
+    {url: 'stun:stun.voipstunt.com'},
+    {url: 'stun:stun.voxgratia.org'},
+    {url: 'stun:stun.xten.com'},
+    {
+      url: 'turn:numb.viagenie.ca',
+      credential: 'muazkh',
+      username: 'webrtc@live.com'
+    },
+    {
+      url: 'turn:192.158.29.39:3478?transport=udp',
+      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+      username: '28224511:1379330808'
+    },
+    {
+      url: 'turn:192.158.29.39:3478?transport=tcp',
+      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+      username: '28224511:1379330808'
+    }
+  ]
+}
 const hub = signalhub('baatcheet', 'https://baatcheet.herokuapp.com')
 const USERS = 'users'
 const peers = {}
@@ -41,6 +79,8 @@ class Chat extends Component {
     this.hideNewUser = this.hideNewUser.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.renderLogin = this.renderLogin.bind(this)
+    this.makeActive = this.makeActive.bind(this)
+    this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
   alert (message) {
@@ -97,7 +137,7 @@ class Chat extends Component {
       return peers[peerId]
     }
 
-    const peer = new Peer({ initiator, wrtc })
+    const peer = new Peer({ initiator, wrtc, config })
 
     peer.on('signal', (signal) => {
       console.log(`signalling ${peerId}`, Object.assign(signal, {peerId: userName}))
@@ -128,7 +168,8 @@ class Chat extends Component {
       ]
 
       this.setState({
-        messages: Object.assign(messages, {[peerId]: newMessages})
+        messages: Object.assign(messages, {[peerId]: newMessages}),
+        active: this.state.active || peerId
       })
     })
 
@@ -159,7 +200,7 @@ class Chat extends Component {
 
     const newMessages = [
       ...(messages[peerId] || []),
-      {timestamp: Date.now(), message, by: userName}
+      {timestamp: Date.now(), message: message.trim(), by: userName}
     ]
 
     this.setState({
@@ -188,6 +229,13 @@ class Chat extends Component {
 
   makeActive (user) {
     this.setState({active: user})
+  }
+
+  handleKeyPress (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      this.send()
+    }
   }
 
   renderLogin () {
@@ -393,7 +441,7 @@ class Chat extends Component {
                 <i className='fa fa-smile-o fa-2x' />
               </div>
               <div className='col-sm-9 col-xs-9 reply-main'>
-                <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} />
+                <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} onKeyPress={this.handleKeyPress} />
               </div>
               <div className='col-sm-1 col-xs-1 reply-recording'>
                 <i className='fa fa-microphone fa-2x' aria-hidden='true' />
