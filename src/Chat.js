@@ -69,7 +69,8 @@ class Chat extends Component {
       users: {},
       messages: {},
       message: '',
-      active: ''
+      active: '',
+      showConverstaion: false
     }
 
     this.alert = this.alert.bind(this)
@@ -80,6 +81,7 @@ class Chat extends Component {
     this.renderLogin = this.renderLogin.bind(this)
     this.makeActive = this.makeActive.bind(this)
     this.handleKeyPress = this.handleKeyPress.bind(this)
+    this.hideConversation = this.hideConversation.bind(this)
   }
 
   alert (message) {
@@ -223,7 +225,10 @@ class Chat extends Component {
 
   connectUser (user) {
     this.connect(user, true)
-    this.setState({active: user})
+    this.setState({
+      active: user,
+      showConverstaion: true
+    })
   }
 
   makeActive (user) {
@@ -246,6 +251,12 @@ class Chat extends Component {
     if (conversation) {
       conversation.scrollTop = conversation.scrollHeight - conversation.clientHeight
     }
+  }
+
+  hideConversation () {
+    this.setState({
+      showConverstaion: false
+    })
   }
 
   renderLogin () {
@@ -301,7 +312,7 @@ class Chat extends Component {
       <div className='container app chatApp'>
         <div className='row app-one'>
 
-          <div className='col-sm-4 side'>
+          <div className='col-sm-4 side' style={window.innerWidth < 768 && this.state.showConverstaion ? {display: 'none'} : {}}>
             <div className='side-one'>
 
               <div className='row heading'>
@@ -356,7 +367,10 @@ class Chat extends Component {
           <div className='col-sm-8 conversation'>
 
             <div className='row heading'>
-              <div className='col-sm-2 col-md-1 col-xs-3 heading-avatar'>
+              <div className='col-sm-1 col-xs-1 heading-dot' style={window.innerWidth < 768 ? {} : {display: 'none'}} onClick={this.hideConversation}>
+                <i className='fa fa-arrow-left fa-2x' aria-hidden='true' />
+              </div>
+              <div className='col-sm-2 col-md-1 col-xs-1 heading-avatar'>
                 <div className='heading-avatar-icon'>
                   {this.state.users[this.state.active]
                     ? <Gravatar email={this.state.users[this.state.active].email} />
@@ -364,7 +378,7 @@ class Chat extends Component {
                   }
                 </div>
               </div>
-              <div className='col-sm-8 col-xs-7 heading-name'>
+              <div className='col-sm-7 col-xs-7 heading-name'>
                 <a className='heading-name-meta'>
                   {this.state.users[this.state.active]
                     ? this.state.users[this.state.active].fullName
@@ -373,7 +387,7 @@ class Chat extends Component {
                 </a>
                 <span className='heading-online'>Online</span>
               </div>
-              <div className='col-sm-1 col-xs-1  heading-dot pull-right'>
+              <div className='col-sm-1 col-xs-1 heading-dot pull-right'>
                 <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
               </div>
             </div>
