@@ -1,6 +1,6 @@
 {
   "name": "baatcheet",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Decentralised Chat application with webrtc",
   "main": "index.js",
   "scripts": {
