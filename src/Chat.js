@@ -16,6 +16,7 @@ const hub = signalhub('baatcheet', 'https://baatcheet.herokuapp.com')
 const USERS = 'users'
 const peers = {}
 
+// chat class
 class Chat extends Component {
   constructor (args) {
     super(args)
@@ -27,6 +28,7 @@ class Chat extends Component {
       email: '',
       users: {},
       messages: {},
+      message: '',
       active: '',
       newUser: false
     }
@@ -69,7 +71,7 @@ class Chat extends Component {
       .on('data', (signal) => {
         console.log('received signal', signal)
 
-        const {peerId} = signal.peerId
+        const peerId = signal.peerId
         const peer = this.connect(peerId, false)
 
         peer.signal(signal)
@@ -79,10 +81,10 @@ class Chat extends Component {
 
     hub.subscribe(USERS)
       .on('data', (data) => {
-        if (data.user === userName) {
+        if (data.userName === userName) {
           return
         }
-        this.setState({users: Object.assign(this.state.users, {[data.user]: data})})
+        this.setState({users: Object.assign(this.state.users, {[data.userName]: data})})
       })
 
     this.setState({loggedIn: true})
@@ -106,6 +108,12 @@ class Chat extends Component {
 
     peer.on('connect', () => {
       console.log(`connected with ${peerId}`)
+      if (initiator) {
+        this.setState({
+          message: `Connected with ${userName}`
+        })
+        this.send()
+      }
     })
 
     peer.on('data', (data) => {
@@ -114,7 +122,14 @@ class Chat extends Component {
         this.setState({messages: Object.assign(messages, {[peerId]: []})})
       }
 
-      this.setState({messages: Object.assign(messages, {[peerId]: [...messages[peerId], {timestamp: Date.now(), message: data, by: peerId}]})})
+      const newMessages = [
+        ...(messages[peerId] || []),
+        {timestamp: Date.now(), message: data.toString(), by: peerId}
+      ]
+
+      this.setState({
+        messages: Object.assign(messages, {[peerId]: newMessages})
+      })
     })
 
     peers[peerId] = peer
@@ -123,10 +138,13 @@ class Chat extends Component {
   }
 
   send () {
-    const { userName, messages } = this.state
+    const { userName, messages, message } = this.state
     const peerId = this.state.active
-    const comment = document.getElementById('comment')
-    const message = comment ? comment.value : ''
+
+    if (!peerId) {
+      this.setState({message: ''})
+      return
+    }
 
     if (!message) {
       return
@@ -134,11 +152,20 @@ class Chat extends Component {
 
     if (!peers[peerId] || !peers[peerId].connected) {
       this.alert(`${peerId} not connected`)
+      return
     }
 
     peers[peerId].send(message)
 
-    this.setState({messages: Object.assign(messages, {[peerId]: [...messages[peerId], {timestamp: Date.now(), message: message, by: userName}]})})
+    const newMessages = [
+      ...(messages[peerId] || []),
+      {timestamp: Date.now(), message, by: userName}
+    ]
+
+    this.setState({
+      messages: Object.assign(messages, {[peerId]: newMessages}),
+      message: ''
+    })
   }
 
   showNewUser () {
@@ -154,12 +181,13 @@ class Chat extends Component {
   }
 
   connectUser (user) {
-    const { userName, messages } = this.state
-
     this.connect(user, true)
     this.hideNewUser()
     this.setState({active: user})
-    this.setState({messages: Object.assign(messages, {[user]: [...messages[user], {timestamp: Date.now(), message: 'Chat End to End Secure', by: userName}]})})
+  }
+
+  makeActive (user) {
+    this.setState({active: user})
   }
 
   renderLogin () {
@@ -243,7 +271,7 @@ class Chat extends Component {
 
               <div className='row sideBar'>
                 {Object.keys(this.state.messages).map((user) => (
-                  <div className='row sideBar-body'>
+                  <div className='row sideBar-body' onClick={() => this.makeActive(user)}>
                     <div className='col-sm-3 col-xs-3 sideBar-avatar'>
                       <div className='avatar-icon'>
                         <Gravatar email={this.state.users[user].email} />
@@ -346,14 +374,14 @@ class Chat extends Component {
                 </div>
               </div>
 
-              {this.state.messages[this.state.active] ? Object.keys(this.state.messages[this.state.active]).map((message) => (
+              {this.state.messages[this.state.active] ? this.state.messages[this.state.active].map((message) => (
                 <div className='row message-body'>
                   <div className={`col-sm-12 message-main-${message.by === this.state.username ? 'sender' : 'receiver'}`}>
                     <div className={message.by === this.state.userName ? 'sender' : 'receiver'}>
                       <div className='message-text'>
                         {message.message}
                       </div>
-                      <span className='message-time pull-right'>Sun</span>
+                      <span className='message-time pull-right'>✓</span>
                     </div>
                   </div>
                 </div>
@@ -365,7 +393,7 @@ class Chat extends Component {
                 <i className='fa fa-smile-o fa-2x' />
               </div>
               <div className='col-sm-9 col-xs-9 reply-main'>
-                <textarea className='form-control' rows='1' id='comment' />
+                <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} />
               </div>
               <div className='col-sm-1 col-xs-1 reply-recording'>
                 <i className='fa fa-microphone fa-2x' aria-hidden='true' />
