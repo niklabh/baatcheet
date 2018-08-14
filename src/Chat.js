@@ -6,6 +6,8 @@ import {
   ControlLabel,
   Button
 } from 'react-bootstrap'
+import uid from 'uid'
+
 import './Chat.css'
 
 const Peer = require('simple-peer')
@@ -170,7 +172,7 @@ class Chat extends Component {
 
       const newMessages = [
         ...(messages[peerId] || []),
-        {timestamp: Date.now(), message: data.toString(), by: peerId}
+        {timestamp: Date.now(), message: data.toString().trim(), by: peerId, id: uid(10)}
       ]
 
       this.setState({
@@ -206,7 +208,7 @@ class Chat extends Component {
 
     const newMessages = [
       ...(messages[peerId] || []),
-      {timestamp: Date.now(), message: message.trim(), by: userName}
+      {timestamp: Date.now(), message: message.trim(), by: userName, id: uid(10)}
     ]
 
     this.setState({
@@ -221,7 +223,6 @@ class Chat extends Component {
 
   connectUser (user) {
     this.connect(user, true)
-    this.hideNewUser()
     this.setState({active: user})
   }
 
@@ -233,6 +234,17 @@ class Chat extends Component {
     if (e.key === 'Enter') {
       e.preventDefault()
       this.send()
+    }
+  }
+
+  componentDidUpdate (prevProps, prevState) {
+    this.scrollToBottom()
+  }
+
+  scrollToBottom () {
+    const {conversation} = this.refs
+    if (conversation) {
+      conversation.scrollTop = conversation.scrollHeight - conversation.clientHeight
     }
   }
 
@@ -366,18 +378,9 @@ class Chat extends Component {
               </div>
             </div>
 
-            <div className='row message' id='conversation'>
-
-              <div className='row message-previous'>
-                <div className='col-sm-12 previous'>
-                  <a id='ankitjain28' name='20'>
-                    Show Previous Message!
-                  </a>
-                </div>
-              </div>
-
+            <div className='row message' id='conversation' ref={'conversation'}>
               {this.state.messages[this.state.active] ? this.state.messages[this.state.active].map((message) => (
-                <div className='row message-body'>
+                <div className='row message-body' key={message.id}>
                   <div className={`col-sm-12 message-main-${message.by === this.state.username ? 'sender' : 'receiver'}`}>
                     <div className={message.by === this.state.userName ? 'sender' : 'receiver'}>
                       <div className='message-text'>
