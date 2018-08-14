@@ -260,6 +260,10 @@ body {
   vertical-align: baseline;
 }
 
+.resigration {
+  padding: 0 10px;
+}
+
 /*New Message*/
 
 .newMessage {
