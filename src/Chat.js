@@ -67,16 +67,13 @@ class Chat extends Component {
       users: {},
       messages: {},
       message: '',
-      active: '',
-      newUser: false
+      active: ''
     }
 
     this.alert = this.alert.bind(this)
     this.login = this.login.bind(this)
     this.connect = this.connect.bind(this)
     this.send = this.send.bind(this)
-    this.showNewUser = this.showNewUser.bind(this)
-    this.hideNewUser = this.hideNewUser.bind(this)
     this.handleChange = this.handleChange.bind(this)
     this.renderLogin = this.renderLogin.bind(this)
     this.makeActive = this.makeActive.bind(this)
@@ -124,7 +121,16 @@ class Chat extends Component {
         if (data.userName === userName) {
           return
         }
-        this.setState({users: Object.assign(this.state.users, {[data.userName]: data})})
+
+        data.online = true
+
+        setTimeout(() => {
+          data.online = false
+        }, 10000)
+
+        this.setState({
+          users: Object.assign(this.state.users, {[data.userName]: data})
+        })
       })
 
     this.setState({loggedIn: true})
@@ -207,14 +213,6 @@ class Chat extends Component {
       messages: Object.assign(messages, {[peerId]: newMessages}),
       message: ''
     })
-  }
-
-  showNewUser () {
-    this.setState({newUser: true})
-  }
-
-  hideNewUser () {
-    this.setState({newUser: false})
   }
 
   handleChange (event) {
@@ -303,7 +301,7 @@ class Chat extends Component {
                 <div className='col-sm-1 col-xs-1  heading-dot  pull-right'>
                   <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
                 </div>
-                <div className='col-sm-2 col-xs-2 heading-compose  pull-right' onClick={this.showNewUser}>
+                <div className='col-sm-2 col-xs-2 heading-compose  pull-right'>
                   <i className='fa fa-comments fa-2x  pull-right' aria-hidden='true' />
                 </div>
               </div>
@@ -318,53 +316,8 @@ class Chat extends Component {
               </div>
 
               <div className='row sideBar'>
-                {Object.keys(this.state.messages).map((user) => (
-                  <div className='row sideBar-body' onClick={() => this.makeActive(user)}>
-                    <div className='col-sm-3 col-xs-3 sideBar-avatar'>
-                      <div className='avatar-icon'>
-                        <Gravatar email={this.state.users[user].email} />
-                      </div>
-                    </div>
-                    <div className='col-sm-9 col-xs-9 sideBar-main'>
-                      <div className='row'>
-                        <div className='col-sm-8 col-xs-8 sideBar-name'>
-                          <span className='name-meta'>{this.state.users[user].fullName} ({this.state.users[user].userName})</span>
-                        </div>
-                        <div className='col-sm-4 col-xs-4 pull-right sideBar-time'>
-                          <span className='time-meta pull-right'>✓</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-            <div className='side-two' style={{left: this.state.newUser ? 0 : '-100%'}}>
-
-              <div className='row newMessage-heading'>
-                <div className='row newMessage-main'>
-                  <div className='col-sm-2 col-xs-2 newMessage-back' onClick={this.hideNewUser}>
-                    <i className='fa fa-arrow-left' aria-hidden='true' />
-                  </div>
-                  <div className='col-sm-10 col-xs-10 newMessage-title'>
-                    New Chat
-                  </div>
-                </div>
-              </div>
-
-              <div className='row composeBox'>
-                <div className='col-sm-12 composeBox-inner'>
-                  <div className='form-group has-feedback'>
-                    <input id='composeText' type='text' className='form-control' name='searchText' placeholder='Search People' />
-                    <span className='glyphicon glyphicon-search form-control-feedback' />
-                  </div>
-                </div>
-              </div>
-
-              <div className='row compose-sideBar'>
                 {Object.keys(this.state.users).map((user) => (
-                  <div className='row sideBar-body' onClick={() => this.connectUser(user)}>
+                  <div key={user} className='row sideBar-body' onClick={() => this.connectUser(user)}>
                     <div className='col-sm-3 col-xs-3 sideBar-avatar'>
                       <div className='avatar-icon'>
                         <Gravatar email={this.state.users[user].email} />
@@ -376,13 +329,14 @@ class Chat extends Component {
                           <span className='name-meta'>{this.state.users[user].fullName} ({this.state.users[user].userName})</span>
                         </div>
                         <div className='col-sm-4 col-xs-4 pull-right sideBar-time'>
-                          <span className='time-meta pull-right'>✓</span>
+                          <span className='time-meta pull-right dot' style={{backgroundColor: this.state.users[user].online ? '#008000' : '#ff0000'}} />
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+
             </div>
 
           </div>
