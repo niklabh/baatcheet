@@ -7,6 +7,7 @@ import {
   Button
 } from 'react-bootstrap'
 import uid from 'uid'
+import EmojiPicker from 'emoji-picker-react'
 
 import './Chat.css'
 
@@ -70,7 +71,8 @@ class Chat extends Component {
       messages: {},
       message: '',
       active: '',
-      showConverstaion: false
+      showConverstaion: false,
+      emojiOpen: false
     }
 
     this.alert = this.alert.bind(this)
@@ -82,6 +84,9 @@ class Chat extends Component {
     this.makeActive = this.makeActive.bind(this)
     this.handleKeyPress = this.handleKeyPress.bind(this)
     this.hideConversation = this.hideConversation.bind(this)
+    this.addEmoji = this.addEmoji.bind(this)
+    this.openEmoji = this.openEmoji.bind(this)
+    this.closeEmoji = this.closeEmoji.bind(this)
   }
 
   alert (message) {
@@ -215,7 +220,8 @@ class Chat extends Component {
 
     this.setState({
       messages: Object.assign(messages, {[peerId]: newMessages}),
-      message: ''
+      message: '',
+      emojiOpen: false
     })
   }
 
@@ -256,6 +262,24 @@ class Chat extends Component {
   hideConversation () {
     this.setState({
       showConverstaion: false
+    })
+  }
+
+  addEmoji (emoji) {
+    this.setState({
+      message: this.state.message + String.fromCodePoint(`0x${emoji}`)
+    })
+  }
+
+  openEmoji () {
+    this.setState({
+      emojiOpen: true
+    })
+  }
+
+  closeEmoji () {
+    this.setState({
+      emojiOpen: false
     })
   }
 
@@ -390,17 +414,20 @@ class Chat extends Component {
               <div className='col-sm-1 col-xs-1 heading-dot pull-right'>
                 <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
               </div>
+              {this.state.emojiOpen ? <EmojiPicker onEmojiClick={this.addEmoji} /> : null}
             </div>
 
             <div className='row message' id='conversation' ref={'conversation'}>
               {this.state.messages[this.state.active] ? this.state.messages[this.state.active].map((message) => (
                 <div className='row message-body' key={message.id}>
-                  <div className={`col-sm-12 message-main-${message.by === this.state.username ? 'sender' : 'receiver'}`}>
+                  <div className={`col-sm-12 message-main-${message.by === this.state.userName ? 'sender' : 'receiver'}`}>
                     <div className={message.by === this.state.userName ? 'sender' : 'receiver'}>
                       <div className='message-text'>
                         {message.message}
                       </div>
-                      <span className='message-time pull-right'>✓</span>
+                      {(message.by === this.state.userName) && (
+                        <span className='message-time pull-right'>✓</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -408,9 +435,15 @@ class Chat extends Component {
             </div>
 
             <div className='row reply'>
-              <div className='col-sm-1 col-xs-1 reply-emojis'>
-                <i className='fa fa-smile-o fa-2x' />
-              </div>
+              {this.state.emojiOpen ? (
+                <div className='col-sm-1 col-xs-1 reply-emojis' onClick={this.closeEmoji}>
+                  <i className='fa fa-arrow-down fa-2x' />
+                </div>
+              ) : (
+                <div className='col-sm-1 col-xs-1 reply-emojis' onClick={this.openEmoji}>
+                  <i className='fa fa-smile-o fa-2x' />
+                </div>
+              )}
               <div className='col-sm-9 col-xs-9 reply-main'>
                 <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} onKeyPress={this.handleKeyPress} />
               </div>

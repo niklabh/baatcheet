@@ -491,7 +491,7 @@ body {
   text-indent: 5px;
   box-shadow: none;
   height: 100%;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .reply-main textarea:focus {
@@ -630,4 +630,15 @@ body {
   background-color: #bbb;
   border-radius: 50%;
   display: inline-block;
+}
+
+.emoji-picker {
+  position: absolute;
+  bottom: 60px;
+  right: 10px;
+}
+
+.emoji-picker .emoji {
+  height: 30px;
+  width: 30px;
 }
