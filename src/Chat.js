@@ -82,7 +82,7 @@ class Chat extends Component {
     this.handleChange = this.handleChange.bind(this)
     this.renderLogin = this.renderLogin.bind(this)
     this.makeActive = this.makeActive.bind(this)
-    this.handleKeyPress = this.handleKeyPress.bind(this)
+    this.handleEnter = this.handleEnter.bind(this)
     this.hideConversation = this.hideConversation.bind(this)
     this.addEmoji = this.addEmoji.bind(this)
     this.openEmoji = this.openEmoji.bind(this)
@@ -241,7 +241,7 @@ class Chat extends Component {
     this.setState({active: user})
   }
 
-  handleKeyPress (e) {
+  handleEnter (e) {
     if (e.key === 'Enter') {
       e.preventDefault()
       this.send()
@@ -414,7 +414,7 @@ class Chat extends Component {
               <div className='col-sm-1 col-xs-1 heading-dot pull-right'>
                 <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
               </div>
-              {this.state.emojiOpen ? <EmojiPicker onEmojiClick={this.addEmoji} /> : null}
+              {this.state.emojiOpen ? <EmojiPicker onEmojiClick={this.addEmoji} onKeyPress={this.handleEnter} /> : null}
             </div>
 
             <div className='row message' id='conversation' ref={'conversation'}>
@@ -445,7 +445,7 @@ class Chat extends Component {
                 </div>
               )}
               <div className='col-sm-9 col-xs-9 reply-main'>
-                <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} onKeyPress={this.handleKeyPress} />
+                <textarea className='form-control' rows='1' id='message' value={this.state.message} onChange={this.handleChange} onKeyPress={this.handleEnter} />
               </div>
               <div className='col-sm-1 col-xs-1 reply-recording'>
                 <i className='fa fa-microphone fa-2x' aria-hidden='true' />

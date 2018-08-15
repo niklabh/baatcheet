@@ -633,12 +633,13 @@ body {
 }
 
 .emoji-picker {
-  position: absolute;
-  bottom: 60px;
-  right: 10px;
+  z-index: 100 !important;
+  position: absolute !important;
+  bottom: 60px !important;
+  right: 10px !important;
 }
 
 .emoji-picker .emoji {
-  height: 30px;
-  width: 30px;
+  height: 30px !important;
+  width: 30px !important;
 }
