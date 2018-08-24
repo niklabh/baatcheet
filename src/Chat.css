@@ -643,3 +643,9 @@ body {
   height: 30px !important;
   width: 30px !important;
 }
+
+.conversation {
+  background-color: #e5ddd5;
+  background-image: url('./background.png');
+  background-size: contain;
+}

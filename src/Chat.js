@@ -8,6 +8,8 @@ import {
 } from 'react-bootstrap'
 import uid from 'uid'
 import EmojiPicker from 'emoji-picker-react'
+import Video from './Video'
+import config from './config'
 
 import './Chat.css'
 
@@ -15,44 +17,6 @@ const Peer = require('simple-peer')
 const signalhub = require('signalhub')
 const wrtc = require('wrtc')
 
-const config = {
-  iceServers: [
-    {url: 'stun:stun.l.google.com:19302'},
-    {url: 'stun:stun1.l.google.com:19302'},
-    {url: 'stun:stun2.l.google.com:19302'},
-    {url: 'stun:stun3.l.google.com:19302'},
-    {url: 'stun:stun4.l.google.com:19302'},
-    {url: 'stun:stun01.sipphone.com'},
-    {url: 'stun:stun.ekiga.net'},
-    {url: 'stun:stun.fwdnet.net'},
-    {url: 'stun:stun.ideasip.com'},
-    {url: 'stun:stun.iptel.org'},
-    {url: 'stun:stun.rixtelecom.se'},
-    {url: 'stun:stun.schlund.de'},
-    {url: 'stun:stunserver.org'},
-    {url: 'stun:stun.softjoys.com'},
-    {url: 'stun:stun.voiparound.com'},
-    {url: 'stun:stun.voipbuster.com'},
-    {url: 'stun:stun.voipstunt.com'},
-    {url: 'stun:stun.voxgratia.org'},
-    {url: 'stun:stun.xten.com'},
-    {
-      url: 'turn:numb.viagenie.ca',
-      credential: 'muazkh',
-      username: 'webrtc@live.com'
-    },
-    {
-      url: 'turn:192.158.29.39:3478?transport=udp',
-      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-      username: '28224511:1379330808'
-    },
-    {
-      url: 'turn:192.158.29.39:3478?transport=tcp',
-      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-      username: '28224511:1379330808'
-    }
-  ]
-}
 const hub = signalhub('baatcheet', 'https://baatcheet.herokuapp.com')
 const USERS = 'users'
 const peers = {}
@@ -72,7 +36,8 @@ class Chat extends Component {
       message: '',
       active: '',
       showConverstaion: false,
-      emojiOpen: false
+      emojiOpen: false,
+      videoCalling: false
     }
 
     this.alert = this.alert.bind(this)
@@ -87,6 +52,7 @@ class Chat extends Component {
     this.addEmoji = this.addEmoji.bind(this)
     this.openEmoji = this.openEmoji.bind(this)
     this.closeEmoji = this.closeEmoji.bind(this)
+    this.makeVideoCall = this.makeVideoCall.bind(this)
   }
 
   alert (message) {
@@ -283,6 +249,12 @@ class Chat extends Component {
     })
   }
 
+  makeVideoCall () {
+    this.setState({
+      videoCalling: true
+    })
+  }
+
   renderLogin () {
     return (
       <div className='container app Signup'>
@@ -334,6 +306,7 @@ class Chat extends Component {
 
     return (
       <div className='container app chatApp'>
+        <Video videoCalling={this.state.videoCalling} user={this.state.userName} peerId={this.state.active} />
         <div className='row app-one'>
 
           <div className='col-sm-4 side' style={window.innerWidth < 768 && this.state.showConverstaion ? {display: 'none'} : {}}>
@@ -345,10 +318,10 @@ class Chat extends Component {
                     <Gravatar email={this.state.email} />
                   </div>
                 </div>
-                <div className='col-sm-1 col-xs-1  heading-dot  pull-right'>
+                <div className='col-sm-1 col-xs-1 heading-dot pull-right'>
                   <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
                 </div>
-                <div className='col-sm-2 col-xs-2 heading-compose  pull-right'>
+                <div className='col-sm-2 col-xs-2 heading-compose pull-right'>
                   <i className='fa fa-comments fa-2x  pull-right' aria-hidden='true' />
                 </div>
               </div>
@@ -394,7 +367,7 @@ class Chat extends Component {
               <div className='col-sm-1 col-xs-1 heading-dot' style={window.innerWidth < 768 ? {} : {display: 'none'}} onClick={this.hideConversation}>
                 <i className='fa fa-arrow-left fa-2x' aria-hidden='true' />
               </div>
-              <div className='col-sm-2 col-md-1 col-xs-1 heading-avatar'>
+              <div className='col-sm-2 col-md-2 col-xs-2 heading-avatar'>
                 <div className='heading-avatar-icon'>
                   {this.state.users[this.state.active]
                     ? <Gravatar email={this.state.users[this.state.active].email} />
@@ -402,7 +375,7 @@ class Chat extends Component {
                   }
                 </div>
               </div>
-              <div className='col-sm-7 col-xs-7 heading-name'>
+              <div className='col-sm-4 col-xs-4 heading-name'>
                 <a className='heading-name-meta'>
                   {this.state.users[this.state.active]
                     ? this.state.users[this.state.active].fullName
@@ -412,8 +385,13 @@ class Chat extends Component {
                 <span className='heading-online'>Online</span>
               </div>
               <div className='col-sm-1 col-xs-1 heading-dot pull-right'>
-                <i className='fa fa-ellipsis-v fa-2x  pull-right' aria-hidden='true' />
+                <i className='fa fa-ellipsis-v fa-2x pull-right' aria-hidden='true' />
               </div>
+              {this.state.users[this.state.active] ? (
+                <div className='col-sm-1 col-xs-1 heading-dot pull-right' onClick={this.makeVideoCall}>
+                  <i className='fa fa-video-camera fa-2x pull-right' aria-hidden='true' />
+                </div>
+              ) : null}
               {this.state.emojiOpen ? <EmojiPicker onEmojiClick={this.addEmoji} onKeyPress={this.handleEnter} /> : null}
             </div>
 
